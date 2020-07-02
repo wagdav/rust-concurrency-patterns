@@ -13,4 +13,5 @@ Install [cargo](https://doc.rust-lang.org/cargo/getting-started/installation.htm
 
 You can run the examples:
 
-    $ cargo run
+    $ cargo run --bin search10
+    $ cargo run --bin search20
