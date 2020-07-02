@@ -11,22 +11,22 @@ enum SearchKind {
     Web,
 }
 
-type SearchQuery = &'static str;
+type SearchQuery = str;
 
 // https://talks.golang.org/2012/concurrency.slide#43
-fn fake_search(query: SearchQuery, kind: SearchKind) {
-    let mut rng = rand::thread_rng();
-    let delay = time::Duration::from_millis(rng.gen_range(1, 100));
+fn fake_search(query: &SearchQuery, kind: &SearchKind) {
+    let ms = rand::thread_rng().gen_range(1, 100);
+    let delay = time::Duration::from_millis(ms);
     thread::sleep(delay);
     println!("{:?} results for {:?} in {:#?}", kind, query, delay);
 }
 
 // Run the Web, Image, and Video searches sequentally
 // https://talks.golang.org/2012/concurrency.slide#45
-fn search10(query: SearchQuery) {
+fn search10(query: &SearchQuery) {
     use SearchKind::*;
 
-    for kind in vec![Web, Image, Video].into_iter() {
+    for kind in vec![Web, Image, Video].iter() {
         fake_search(query, kind);
     }
 }
