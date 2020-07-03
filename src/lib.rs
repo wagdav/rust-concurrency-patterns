@@ -21,7 +21,7 @@ fn fake_search(query: &SearchQuery, kind: &SearchKind) -> String {
     format!("{:?} results for {:?} in {:#?}", kind, query, delay)
 }
 
-pub fn print_result(results: &Vec<String>) {
+pub fn print_result(results: &[String]) {
     println!("{:?}", results)
 }
 
