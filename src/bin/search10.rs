@@ -1,6 +1,7 @@
-use rust_concurrency_patterns::*;
+use rust_concurrency_patterns::search10;
 
-fn main() {
-    let result = search10("rust");
-    print_result(&result)
+#[tokio::main]
+async fn main() {
+    let result = search10("rust").await;
+    println!("{}", result)
 }

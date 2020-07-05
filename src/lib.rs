@@ -1,8 +1,7 @@
 use rand::Rng;
-use std::thread;
-use std::time;
-
-use rayon::prelude::*;
+use std::fmt;
+use std::time::Duration;
+use tokio::time::delay_for;
 
 #[derive(Debug)]
 enum SearchKind {
@@ -13,36 +12,40 @@ enum SearchKind {
 
 type SearchQuery = str;
 
-// https://talks.golang.org/2012/concurrency.slide#43
-fn fake_search(query: &SearchQuery, kind: &SearchKind) -> String {
-    let ms = rand::thread_rng().gen_range(1, 100);
-    let delay = time::Duration::from_millis(ms);
-    thread::sleep(delay);
-    format!("{:?} results for {:?} in {:#?}", kind, query, delay)
+pub struct SearchResult(String, String, String);
+
+impl fmt::Display for SearchResult {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "({}, {}, {})", self.0, self.1, self.2)
+    }
 }
 
-pub fn print_result(results: &[String]) {
-    println!("{:?}", results)
+// https://talks.golang.org/2012/concurrency.slide#43
+async fn fake_search(query: &SearchQuery, kind: &SearchKind) -> String {
+    let ms = rand::thread_rng().gen_range(1, 100);
+    let duration = Duration::from_millis(ms);
+    delay_for(duration).await;
+    format!("{:?} results for {:?} in {:#?}", kind, query, duration)
 }
 
 // Run the Web, Image, and Video searches sequentally
 // https://talks.golang.org/2012/concurrency.slide#45
-pub fn search10(query: &SearchQuery) -> Vec<String> {
-    use SearchKind::*;
-
-    [Web, Image, Video]
-        .iter()
-        .map(|kind| fake_search(query, kind))
-        .collect()
+pub async fn search10(query: &SearchQuery) -> SearchResult {
+    SearchResult(
+        fake_search(query, &SearchKind::Web).await,
+        fake_search(query, &SearchKind::Image).await,
+        fake_search(query, &SearchKind::Video).await,
+    )
 }
 
 // Run the Web, Image, and Video searches concurrently, and wait for all results.
 // https://talks.golang.org/2012/concurrency.slide#47
-pub fn search20(query: &SearchQuery) -> Vec<String> {
-    use SearchKind::*;
+pub async fn search20(query: &SearchQuery) -> SearchResult {
+    let (web, image, video) = tokio::join!(
+        fake_search(query, &SearchKind::Web),
+        fake_search(query, &SearchKind::Image),
+        fake_search(query, &SearchKind::Video),
+    );
 
-    [Web, Image, Video]
-        .par_iter()
-        .map(|kind| fake_search(query, kind))
-        .collect()
+    SearchResult(web, image, video)
 }
