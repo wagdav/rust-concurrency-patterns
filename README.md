@@ -16,3 +16,4 @@ You can run the examples:
     $ cargo run --bin search10
     $ cargo run --bin search20
     $ cargo run --bin search21
+    $ cargo run --bin search30

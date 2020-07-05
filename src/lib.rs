@@ -20,7 +20,7 @@ impl SearchResult {
         SearchResult(Some((a, b, c)))
     }
 
-    fn timeout() -> SearchResult{
+    fn timeout() -> SearchResult {
         SearchResult(None)
     }
 }
@@ -69,8 +69,32 @@ pub async fn search20(query: &SearchQuery) -> SearchResult {
 // Don't wait for slow servers.
 // https://talks.golang.org/2012/concurrency.slide#47
 pub async fn search21(query: &SearchQuery) -> SearchResult {
-    match timeout(TIMEOUT, search20(query)).await {
-        Ok(result) => result,
-        Err(_) => SearchResult::timeout(),
-    }
+    timeout(TIMEOUT, search20(query))
+        .await
+        .unwrap_or_else(|_| SearchResult::timeout())
+}
+
+// Reduce tail latency using replicated search servers.
+// https://talks.golang.org/2012/concurrency.slide#50
+pub async fn search30(query: &SearchQuery) -> SearchResult {
+    timeout(TIMEOUT, async {
+        tokio::join!(
+            fastest(query, &SearchKind::Web),
+            fastest(query, &SearchKind::Image),
+            fastest(query, &SearchKind::Video),
+        )
+    })
+    .await
+    .map(|(web, image, video)| SearchResult::new(web, image, video))
+    .unwrap_or_else(|_| SearchResult::timeout())
+}
+
+async fn fastest(query: &SearchQuery, kind: &SearchKind) -> String {
+    let (server, result) = tokio::select!(
+        r = fake_search(query, kind) => (1, r),
+        r = fake_search(query, kind) => (2, r),
+        r = fake_search(query, kind) => (3, r),
+    );
+
+    format!("Server {}: {}", server, result)
 }
