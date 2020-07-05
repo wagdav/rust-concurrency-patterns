@@ -1,7 +1,7 @@
 use rand::Rng;
 use std::fmt;
 use std::time::Duration;
-use tokio::time::delay_for;
+use tokio::time::{delay_for, timeout};
 
 #[derive(Debug)]
 enum SearchKind {
@@ -12,13 +12,29 @@ enum SearchKind {
 
 type SearchQuery = str;
 
-pub struct SearchResult(String, String, String);
+#[derive(Debug)]
+pub struct SearchResult(Option<(String, String, String)>);
+
+impl SearchResult {
+    fn new(a: String, b: String, c: String) -> SearchResult {
+        SearchResult(Some((a, b, c)))
+    }
+
+    fn timeout() -> SearchResult{
+        SearchResult(None)
+    }
+}
 
 impl fmt::Display for SearchResult {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "({}, {}, {})", self.0, self.1, self.2)
+        match self {
+            Self(Some((a, b, c))) => write!(f, "({}, {}, {})", a, b, c),
+            Self(None) => write!(f, "timed out"),
+        }
     }
 }
+
+const TIMEOUT: Duration = Duration::from_millis(80);
 
 // https://talks.golang.org/2012/concurrency.slide#43
 async fn fake_search(query: &SearchQuery, kind: &SearchKind) -> String {
@@ -31,7 +47,7 @@ async fn fake_search(query: &SearchQuery, kind: &SearchKind) -> String {
 // Run the Web, Image, and Video searches sequentally
 // https://talks.golang.org/2012/concurrency.slide#45
 pub async fn search10(query: &SearchQuery) -> SearchResult {
-    SearchResult(
+    SearchResult::new(
         fake_search(query, &SearchKind::Web).await,
         fake_search(query, &SearchKind::Image).await,
         fake_search(query, &SearchKind::Video).await,
@@ -47,5 +63,14 @@ pub async fn search20(query: &SearchQuery) -> SearchResult {
         fake_search(query, &SearchKind::Video),
     );
 
-    SearchResult(web, image, video)
+    SearchResult::new(web, image, video)
+}
+
+// Don't wait for slow servers.
+// https://talks.golang.org/2012/concurrency.slide#47
+pub async fn search21(query: &SearchQuery) -> SearchResult {
+    match timeout(TIMEOUT, search20(query)).await {
+        Ok(result) => result,
+        Err(_) => SearchResult::timeout(),
+    }
 }
