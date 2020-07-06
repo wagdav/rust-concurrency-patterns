@@ -13,8 +13,8 @@ rustPlatform.buildRustPackage rec {
     filter = lib.cleanSourceFilter;
   };
 
-  cargoSha256 = "05lf2bjnqd3jggpfly3skh686is57gk81x8hcdwsyyjsvcxs0ixp";
-  verifyCargoDeps = false;
+  cargoSha256 = "0qqap1f8wmbiz6dn8q6q4zd8skxqnyszqjyg4bw4shvv422933s2";
+  verifyCargoDeps = false;  # FIXME: fails when it's set to true
 
   preferLocalBuild = true;
 }
