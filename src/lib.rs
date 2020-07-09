@@ -23,6 +23,13 @@ impl SearchResult {
     fn timeout() -> SearchResult {
         SearchResult(None)
     }
+
+    pub fn succeeded(&self) -> bool {
+        match self {
+            SearchResult(Some(_)) => true,
+            SearchResult(None) => false,
+        }
+    }
 }
 
 impl fmt::Display for SearchResult {
