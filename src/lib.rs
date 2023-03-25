@@ -1,7 +1,7 @@
 use rand::Rng;
 use std::fmt;
 use std::time::Duration;
-use tokio::time::{delay_for, timeout};
+use tokio::time::{sleep, timeout};
 
 #[derive(Debug)]
 enum SearchKind {
@@ -47,7 +47,7 @@ const TIMEOUT: Duration = Duration::from_millis(80);
 async fn fake_search(query: &SearchQuery, kind: &SearchKind) -> String {
     let ms = rand::thread_rng().gen_range(1, 100);
     let duration = Duration::from_millis(ms);
-    delay_for(duration).await;
+    sleep(duration).await;
     format!("{:?} results for {:?} in {:#?}", kind, query, duration)
 }
 
