@@ -1,4 +1,3 @@
-use rand::Rng;
 use std::fmt;
 use std::time::Duration;
 use tokio::time::{sleep, timeout};
@@ -45,7 +44,7 @@ const TIMEOUT: Duration = Duration::from_millis(80);
 
 // https://talks.golang.org/2012/concurrency.slide#43
 async fn fake_search(query: &SearchQuery, kind: &SearchKind) -> String {
-    let ms = rand::thread_rng().gen_range(1, 100);
+    let ms = rand::random_range(1..100);
     let duration = Duration::from_millis(ms);
     sleep(duration).await;
     format!("{:?} results for {:?} in {:#?}", kind, query, duration)
